@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mia 的 AI 工具箱</title>
+<style>
+  :root {
+    --bg: #f6f8fc;
+    --card-bg: #ffffff;
+    --text: #1f2a44;
+    --text-soft: #5b6b8c;
+    --shadow: 0 8px 24px rgba(31, 42, 68, 0.08);
+    --shadow-hover: 0 16px 40px rgba(31, 42, 68, 0.16);
+    --radius: 20px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: "Noto Sans TC", "Microsoft JhengHei", -apple-system, "Segoe UI", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── 頂部漸層背景 ── */
+  .hero {
+    position: relative;
+    padding: 72px 24px 140px;
+    text-align: center;
+    background: linear-gradient(135deg, #7dd3fc 0%, #a5b4fc 40%, #f9a8d4 75%, #fcd34d 100%);
+    overflow: hidden;
+  }
+  .hero::after {
+    content: "";
+    position: absolute;
+    left: 0; right: 0; bottom: -1px;
+    height: 80px;
+    background: var(--bg);
+    border-radius: 100% 100% 0 0 / 80px 80px 0 0;
+  }
+  .hero .blob {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(60px);
+    opacity: 0.5;
+    animation: float 10s ease-in-out infinite;
+  }
+  .blob1 { width: 300px; height: 300px; background: #fff; top: -80px; left: -60px; }
+  .blob2 { width: 240px; height: 240px; background: #fef08a; bottom: 20px; right: -40px; animation-delay: -4s; }
+  @keyframes float {
+    0%, 100% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(24px) scale(1.06); }
+  }
+
+  .hero h1 {
+    position: relative;
+    font-size: clamp(2rem, 5vw, 3rem);
+    font-weight: 900;
+    color: #fff;
+    letter-spacing: 0.05em;
+    text-shadow: 0 2px 12px rgba(31, 42, 68, 0.18);
+  }
+  .hero h1 .emoji { display: inline-block; animation: bounce 2.4s ease-in-out infinite; }
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-8px) rotate(-8deg); }
+  }
+  .hero p {
+    position: relative;
+    margin-top: 14px;
+    font-size: clamp(1rem, 2.5vw, 1.15rem);
+    color: rgba(255, 255, 255, 0.92);
+    font-weight: 500;
+  }
+
+  /* ── 分類篩選列 ── */
+  .filter-bar {
+    max-width: 1080px;
+    margin: -90px auto 0;
+    padding: 0 24px;
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+  }
+  .filter-btn {
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.95rem;
+    font-weight: 700;
+    padding: 10px 22px;
+    border-radius: 999px;
+    background: #fff;
+    color: var(--text-soft);
+    box-shadow: var(--shadow);
+    transition: all 0.2s ease;
+  }
+  .filter-btn:hover { transform: translateY(-2px); color: var(--text); }
+  .filter-btn.active {
+    background: linear-gradient(135deg, #38bdf8, #8b5cf6);
+    color: #fff;
+  }
+
+  /* ── 分類區塊 ── */
+  .sections {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 36px 24px 40px;
+    position: relative;
+    z-index: 2;
+  }
+  .section { margin-bottom: 44px; }
+  .section.hidden { display: none; }
+  .section-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .section-title .s-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    background: var(--s-accent-soft, #e0f2fe);
+  }
+  .section-title h2 {
+    font-size: 1.35rem;
+    font-weight: 900;
+    letter-spacing: 0.03em;
+  }
+  .section-title .count {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--text-soft);
+    background: #fff;
+    padding: 3px 12px;
+    border-radius: 999px;
+    box-shadow: var(--shadow);
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 24px;
+  }
+
+  .card {
+    display: flex;
+    flex-direction: column;
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    padding: 28px;
+    text-decoration: none;
+    color: var(--text);
+    box-shadow: var(--shadow);
+    border-top: 5px solid var(--accent);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+  }
+  .card:hover {
+    transform: translateY(-6px);
+    box-shadow: var(--shadow-hover);
+  }
+
+  .card .icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 30px;
+    background: var(--accent-soft);
+    margin-bottom: 18px;
+    transition: transform 0.25s ease;
+  }
+  .card:hover .icon { transform: scale(1.12) rotate(-6deg); }
+
+  .card h2 {
+    font-size: 1.25rem;
+    font-weight: 800;
+    margin-bottom: 8px;
+  }
+  .card p {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: var(--text-soft);
+    flex: 1;
+  }
+
+  .card .go {
+    margin-top: 20px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--accent);
+  }
+  .card .go::after {
+    content: "→";
+    transition: transform 0.25s ease;
+  }
+  .card:hover .go::after { transform: translateX(5px); }
+
+  .tag {
+    display: inline-block;
+    align-self: flex-start;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    margin-bottom: 12px;
+    letter-spacing: 0.06em;
+  }
+
+  /* 各卡片主題色 */
+  .c-blue   { --accent: #0ea5e9; --accent-soft: #e0f2fe; }
+  .c-purple { --accent: #8b5cf6; --accent-soft: #ede9fe; }
+  .c-green  { --accent: #10b981; --accent-soft: #d1fae5; }
+  .c-orange { --accent: #f59e0b; --accent-soft: #fef3c7; }
+  .c-pink   { --accent: #ec4899; --accent-soft: #fce7f3; }
+
+  footer {
+    text-align: center;
+    padding: 28px 16px 40px;
+    color: var(--text-soft);
+    font-size: 0.88rem;
+  }
+  footer .heart { color: #ec4899; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="blob blob1"></div>
+  <div class="blob blob2"></div>
+  <h1><span class="emoji">🧰</span> Mia 的 AI 工具箱</h1>
+  <p>所有 AI 製作的工具，一站集中管理 ✨</p>
+</header>
+
+<nav class="filter-bar">
+  <button class="filter-btn active" data-cat="all">全部</button>
+  <button class="filter-btn" data-cat="project">📈 專案與人事</button>
+  <button class="filter-btn" data-cat="content">🛠️ 網站與文件</button>
+  <button class="filter-btn" data-cat="dev">💻 開發資源</button>
+</nav>
+
+<main class="sections">
+
+  <section class="section" data-cat="project" style="--s-accent-soft:#e0f2fe">
+    <div class="section-title">
+      <div class="s-icon">📈</div>
+      <h2>專案與人事管理</h2>
+      <span class="count">2 個工具</span>
+    </div>
+    <div class="grid">
+
+      <a class="card c-blue" href="https://miachan02090825.github.io/worktool/" target="_blank" rel="noopener">
+        <div class="icon">📊</div>
+        <span class="tag">專案管理</span>
+        <h2>專案戰情室</h2>
+        <p>即時掌握專案進度與狀態，所有專案資訊一目瞭然的戰情中心。</p>
+        <span class="go">前往工具</span>
+      </a>
+
+      <a class="card c-orange" href="https://220.133.168.126:3000/login" target="_blank" rel="noopener">
+        <div class="icon">🕐</div>
+        <span class="tag">人事管理</span>
+        <h2>外包考勤系統</h2>
+        <p>外包人員上下班打卡與出勤紀錄管理系統，考勤資料輕鬆掌握。</p>
+        <span class="go">前往系統</span>
+      </a>
+
+    </div>
+  </section>
+
+  <section class="section" data-cat="content" style="--s-accent-soft:#ede9fe">
+    <div class="section-title">
+      <div class="s-icon">🛠️</div>
+      <h2>網站與文件工具</h2>
+      <span class="count">2 個工具</span>
+    </div>
+    <div class="grid">
+
+      <a class="card c-purple" href="https://miachan02090825.github.io/seo-geo-scanner/" target="_blank" rel="noopener">
+        <div class="icon">🔍</div>
+        <span class="tag">網站優化</span>
+        <h2>SEO + GEO 智能掃描工具</h2>
+        <p>智能掃描網站的 SEO 與 GEO（生成式引擎優化）表現，找出優化建議。</p>
+        <span class="go">前往工具</span>
+      </a>
+
+      <a class="card c-green" href="https://miachan02090825.github.io/spec-normalizer/" target="_blank" rel="noopener">
+        <div class="icon">📄</div>
+        <span class="tag">文件處理</span>
+        <h2>規格文件標準化工具</h2>
+        <p>將規格文件自動整理成統一標準格式，省下手動排版與校對時間。</p>
+        <span class="go">前往工具</span>
+      </a>
+
+    </div>
+  </section>
+
+  <section class="section" data-cat="dev" style="--s-accent-soft:#fce7f3">
+    <div class="section-title">
+      <div class="s-icon">💻</div>
+      <h2>開發資源</h2>
+      <span class="count">1 個工具</span>
+    </div>
+    <div class="grid">
+
+      <a class="card c-pink" href="https://github.com/miachan02090825" target="_blank" rel="noopener">
+        <div class="icon">🐙</div>
+        <span class="tag">程式碼</span>
+        <h2>我的 GitHub</h2>
+        <p>所有專案的原始碼都在這裡，歡迎參觀我的 GitHub 主頁。</p>
+        <span class="go">前往 GitHub</span>
+      </a>
+
+    </div>
+  </section>
+
+</main>
+
+<script>
+  const buttons = document.querySelectorAll('.filter-btn');
+  const sections = document.querySelectorAll('.section');
+  buttons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      buttons.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const cat = btn.dataset.cat;
+      sections.forEach(sec => {
+        sec.classList.toggle('hidden', cat !== 'all' && sec.dataset.cat !== cat);
+      });
+    });
+  });
+</script>
+
+<footer>
+  Made with <span class="heart">♥</span> by Mia · Powered by AI
+</footer>
+
+</body>
+</html>
