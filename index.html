@@ -231,6 +231,32 @@
   .c-green  { --accent: #10b981; --accent-soft: #d1fae5; }
   .c-orange { --accent: #f59e0b; --accent-soft: #fef3c7; }
   .c-pink   { --accent: #ec4899; --accent-soft: #fce7f3; }
+  .c-teal   { --accent: #14b8a6; --accent-soft: #ccfbf1; }
+
+  /* 卡片上的次要小按鈕（複製路徑） */
+  .card .mini-btn {
+    margin-top: 12px;
+    align-self: flex-start;
+    border: 1.5px solid var(--accent-soft);
+    background: #fff;
+    color: var(--text-soft);
+    font-family: inherit;
+    font-size: 0.8rem;
+    font-weight: 700;
+    padding: 6px 14px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .card .mini-btn:hover {
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+  .card .mini-btn.copied {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
 
   footer {
     text-align: center;
@@ -255,6 +281,7 @@
   <button class="filter-btn" data-cat="project">📈 專案與人事</button>
   <button class="filter-btn" data-cat="content">🛠️ 網站與文件</button>
   <button class="filter-btn" data-cat="dev">💻 開發資源</button>
+  <button class="filter-btn" data-cat="local">🖥️ 本機工具</button>
 </nav>
 
 <main class="sections">
@@ -332,6 +359,26 @@
     </div>
   </section>
 
+  <section class="section" data-cat="local" style="--s-accent-soft:#ccfbf1">
+    <div class="section-title">
+      <div class="s-icon">🖥️</div>
+      <h2>本機工具</h2>
+      <span class="count">1 個工具</span>
+    </div>
+    <div class="grid">
+
+      <a class="card c-teal" href="http://localhost:3131" target="_blank" rel="noopener">
+        <div class="icon">✅</div>
+        <span class="tag">本機・驗收文件</span>
+        <h2>驗收單填寫工具</h2>
+        <p>自動填寫並產出驗收單 Word 文件。需先在本機執行資料夾內的「啟動填寫工具.bat」，再點卡片開啟工具。</p>
+        <button class="mini-btn" data-copy="D:\OneDrive - International Games System\桌面\Claude\驗收單工具">📁 複製資料夾路徑</button>
+        <span class="go">開啟工具</span>
+      </a>
+
+    </div>
+  </section>
+
 </main>
 
 <script>
@@ -345,6 +392,38 @@
       sections.forEach(sec => {
         sec.classList.toggle('hidden', cat !== 'all' && sec.dataset.cat !== cat);
       });
+    });
+  });
+
+  function copyText(text) {
+    if (navigator.clipboard && window.isSecureContext) {
+      return navigator.clipboard.writeText(text);
+    }
+    // 備援：舊式複製法（http 或不支援 clipboard API 的環境）
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    const ok = document.execCommand('copy');
+    document.body.removeChild(ta);
+    return ok ? Promise.resolve() : Promise.reject();
+  }
+
+  document.querySelectorAll('.mini-btn[data-copy]').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.preventDefault();
+      e.stopPropagation();
+      const original = btn.textContent;
+      copyText(btn.dataset.copy)
+        .then(() => { btn.textContent = '✅ 已複製！貼到檔案總管即可開啟'; })
+        .catch(() => { btn.textContent = '⚠️ 複製失敗，請手動複製路徑'; });
+      btn.classList.add('copied');
+      setTimeout(() => {
+        btn.textContent = original;
+        btn.classList.remove('copied');
+      }, 2200);
     });
   });
 </script>
